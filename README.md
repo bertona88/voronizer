@@ -1,6 +1,6 @@
 # Voronizer — Open-Cell Strut Generator
 
-Voronizer turns any STL mesh into an airy, open-cell structure built from Voronoi struts. CUDA kernels voxelize the source model, seed a Voronoi diagram, and emit printable lattices for both the model interior and optional support scaffolding. The latest iteration focuses on **hollow, strut-based Voronization**—dial in shell thickness, strut diameters, and surface nets to produce lightweight foams straight from your GPU.
+Voronizer turns any STL mesh into an airy, open-cell structure built from Voronoi struts. CUDA kernels voxelize the source model, seed a Voronoi diagram, and emit printable lattices for both the model interior and optional support scaffolding. The latest iteration focuses on **hollow, strut-based Voronization**—dial in shell thickness, strut diameters, and surface nets to produce lightweight foams straight from your GPU (or fall back to a CPU path when CUDA is unavailable).
 
 ## What You Get
 - **Open Voronoi foam**: fill the model volume with struts or keep only a thin surface net.
@@ -9,7 +9,7 @@ Voronizer turns any STL mesh into an airy, open-cell structure built from Vorono
 - **Debug + export tools**: slice visualizer, raw voxel analysis, and mesh exporters for downstream cleanup.
 
 ## Requirements
-- NVIDIA GPU + CUDA Toolkit (10.x or newer recommended).
+- NVIDIA GPU + CUDA Toolkit (10.x or newer recommended). When CUDA is missing, Voronizer automatically falls back to a CPU implementation of the strut finder—expect noticeably longer runtimes, but identical outputs.
 - Python 3.8+ with `numba`, `numpy`, `matplotlib`, `Pillow`, `scikit-image` installed.
 
 ```
@@ -35,7 +35,7 @@ pip install numba numpy matplotlib Pillow scikit-image
    - `MODEL_SHELL`: add a solid skin outside the lattice (keep `0` for fully open cells).
    - `NET = True` + `NET_THICKNESS`: surface-only webbing.
    - `PERFORATE = True`: drill holes through support cells for resin flushes.
-3. Run `python main.py`.
+3. Run `python main.py`. On systems without CUDA, the CPU fallback kicks in automatically; just budget extra time for the strut-finding phase.
 4. Collect `.ply` meshes from `Output/` and, if necessary, post-process in MeshLab (clean non-manifold faces, apply HC-Laplacian smoothing).
 
 ## Open-Cell Tips
