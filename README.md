@@ -9,7 +9,7 @@ Voronizer turns any STL mesh into an airy, open-cell structure built from Vorono
 - **Debug + export tools**: slice visualizer, raw voxel analysis, and mesh exporters for downstream cleanup.
 
 ## Requirements
-- NVIDIA GPU + CUDA Toolkit (10.x or newer recommended). When CUDA is missing, Voronizer automatically falls back to a CPU implementation of the strut finder—expect noticeably longer runtimes, but identical outputs.
+- NVIDIA GPU + CUDA Toolkit (10.x or newer recommended). When CUDA is missing, Voronizer automatically falls back to a CPU implementation of the strut finder—expect noticeably longer runtimes on large grids (though tiny lattices can actually finish faster on CPU because they avoid CUDA launch/transfer overhead).
 - Python 3.8+ with `numba`, `numpy`, `matplotlib`, `Pillow`, `scikit-image` installed.
 
 ```
@@ -35,7 +35,7 @@ pip install numba numpy matplotlib Pillow scikit-image
    - `MODEL_SHELL`: add a solid skin outside the lattice (keep `0` for fully open cells).
    - `NET = True` + `NET_THICKNESS`: surface-only webbing.
    - `PERFORATE = True`: drill holes through support cells for resin flushes.
-3. Run `python main.py`. On systems without CUDA, the CPU fallback kicks in automatically; just budget extra time for the strut-finding phase.
+3. Run `python main.py`. On systems without CUDA, the CPU fallback kicks in automatically; just budget extra time for the strut-finding phase (unless you’re experimenting on very small structures, where the CPU route can be quicker).
 4. Collect `.ply` meshes from `Output/` and, if necessary, post-process in MeshLab (clean non-manifold faces, apply HC-Laplacian smoothing).
 
 ## Open-Cell Tips
