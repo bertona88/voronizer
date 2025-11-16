@@ -1,0 +1,15 @@
+# OS artifacts
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Generated assets
+Output/
+*.ply
+
+# Local run logs and scratch
+*.log
+*.tmp
