@@ -4,6 +4,7 @@ Voronizer turns any STL mesh into an airy, open-cell structure built from Vorono
 
 ## What You Get
 - **Open Voronoi foam**: fill the model volume with struts or keep only a thin surface net.
+- **Surface or hybrid nets**: toggle `NET = True` for a classic surface Voronoi tiling; set `NET_CONNECT = True` to fuse that net with a full volumetric lattice inside.
 - **Per-feature control**: independent parameters for model infill and support lattices (`MODEL_CELL`, `SUPPORT_CELL`, thresholds, shells).
 - **GPU-accelerated pipeline**: `numba.cuda` kernels for voxelization, signed-distance evaluation, and Voronoi carving.
 - **Debug + export tools**: slice visualizer, raw voxel analysis, and mesh exporters for downstream cleanup.
@@ -33,7 +34,8 @@ pip install numba numpy matplotlib Pillow scikit-image
    - `MODEL_CELL` / `SUPPORT_CELL`: target Voronoi strut thickness in voxels.
    - `MODEL_THRESH` / `SUPPORT_THRESH`: cell density. Larger = more points/struts.
    - `MODEL_SHELL`: add a solid skin outside the lattice (keep `0` for fully open cells).
-   - `NET = True` + `NET_THICKNESS`: surface-only webbing.
+   - `NET = True` + `NET_THICKNESS`: surface-only webbing using a surface Voronoi tiling.
+   - `NET_CONNECT = True`: fuse the surface net with the full volumetric Voronoi interior.
    - `PERFORATE = True`: drill holes through support cells for resin flushes.
 3. Run `python main.py`. On systems without CUDA, the CPU fallback kicks in automatically; just budget extra time for the strut-finding phase (unless you’re experimenting on very small structures, where the CPU route can be quicker).
 4. Collect `.ply` meshes from `Output/` and, if necessary, post-process in MeshLab (clean non-manifold faces, apply HC-Laplacian smoothing).

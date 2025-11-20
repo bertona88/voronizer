@@ -4,7 +4,7 @@ import time
 import numpy as np
 import Frep as f
 import userInput as u
-from voronize import voronize
+from voronize import voronize, surface_voronoi_net
 from SDF3D import SDF3D, xHeight
 from pointGen import genRandPoints, explode
 from meshExport import generateMesh
@@ -87,7 +87,6 @@ def main():
 
     print("Initial Bounding Box Dimensions: "+str(origShape.shape))
     origShape = SDF3D(f.condense(origShape,u.BUFFER))
-    if u.NET: origShape = f.shell(origShape,u.NET_THICKNESS)
     print("Condensed Bounding Box Dimensions: "+str(origShape.shape))
     
     if u.SUPPORT:
@@ -107,15 +106,26 @@ def main():
         findVol(supportVoronoi,scale,u.MAT_DENSITY,"Support")
     
     if u.MODEL:
-        if u.AESTHETIC:
-            objectPts = genRandPoints(f.shell(origShape,5),u.MODEL_THRESH)
+        if u.NET:
+            surfaceNet = surface_voronoi_net(origShape, u.MODEL_THRESH, u.NET_THICKNESS, u.MODEL_CELL, scale, name="Object")
+            if u.NET_CONNECT:
+                volumePts = genRandPoints(origShape,u.MODEL_THRESH)
+                print("Points Generated (volume)!")
+                volumeVoronoi = voronize(origShape, volumePts, u.MODEL_CELL, u.MODEL_SHELL, scale, name = "Object Interior")
+                objectVoronoi = f.union(surfaceNet, volumeVoronoi)
+            else:
+                objectVoronoi = surfaceNet
+            findVol(objectVoronoi, scale, u.MAT_DENSITY, "Object")
         else:
-            objectPts = genRandPoints(origShape,u.MODEL_THRESH)
-        print("Points Generated!")
-        objectVoronoi = voronize(origShape, objectPts, u.MODEL_CELL, u.MODEL_SHELL, scale, name = "Object")
-        findVol(objectVoronoi,scale,u.MAT_DENSITY,"Object") #in mm^3
-        if u.AESTHETIC:
-            objectVoronoi = f.union(objectVoronoi,f.thicken(origShape,-5))
+            if u.AESTHETIC:
+                objectPts = genRandPoints(f.shell(origShape,5),u.MODEL_THRESH)
+            else:
+                objectPts = genRandPoints(origShape,u.MODEL_THRESH)
+            print("Points Generated!")
+            objectVoronoi = voronize(origShape, objectPts, u.MODEL_CELL, u.MODEL_SHELL, scale, name = "Object")
+            findVol(objectVoronoi,scale,u.MAT_DENSITY,"Object") #in mm^3
+            if u.AESTHETIC:
+                objectVoronoi = f.union(objectVoronoi,f.thicken(origShape,-5))
     shortName = shortName+"_Voronoi"
     if u.SUPPORT and u.MODEL:
         complete = f.union(objectVoronoi,supportVoronoi)

@@ -1,3 +1,4 @@
+from collections import deque
 from visualizeSlice import slicePlot, contourPlot
 import Frep as f
 from SDF3D import SDF3D, jumpFlood
@@ -93,6 +94,70 @@ def voronize(origObject, seedPoints, cellThickness, shellThickness, scale,
         name = "Model"
     print("Voronize for " + name + " Complete!")
     return voronoi
+
+def surface_voronoi_net(orig_sdf, seed_density, net_thickness, cell_thickness, scale, name="Object"):
+    """Generate a classic surface Voronoi net: seeds live on the true surface, Voronoi cells are computed over a thin shell, then extruded."""
+    shell_thickness = max(1, int(round(net_thickness)))
+    shell_sdf = f.shell(orig_sdf, shell_thickness)
+    surface_mask = shell_sdf <= 0
+    surface_band = np.abs(orig_sdf) <= max(1.0, net_thickness * 0.75)
+    prob = seed_density / max(orig_sdf.shape)
+    rng = np.random.rand(*orig_sdf.shape)
+    seed_mask = surface_band & (rng < prob)
+    if not seed_mask.any():
+        candidates = np.argwhere(surface_band)
+        if candidates.size == 0:
+            candidates = np.argwhere(surface_mask)
+        if candidates.size:
+            sx, sy, sz = candidates[np.random.randint(len(candidates))]
+            seed_mask[sx, sy, sz] = True
+    seed_coords = np.argwhere(seed_mask)
+    labels = -np.ones(orig_sdf.shape, dtype=np.int32)
+    dist = np.full(orig_sdf.shape, np.inf, dtype=np.float32)
+    q = deque()
+    for idx, (x, y, z) in enumerate(seed_coords):
+        labels[x, y, z] = idx
+        dist[x, y, z] = 0.0
+        q.append((x, y, z))
+    neighbors = ((1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1))
+    while q:
+        x, y, z = q.popleft()
+        cur_label = labels[x, y, z]
+        cur_dist = dist[x, y, z]
+        for dx, dy, dz in neighbors:
+            nx, ny, nz = x + dx, y + dy, z + dz
+            if nx < 0 or ny < 0 or nz < 0 or nx >= orig_sdf.shape[0] or ny >= orig_sdf.shape[1] or nz >= orig_sdf.shape[2]:
+                continue
+            if not surface_mask[nx, ny, nz]:
+                continue
+            nd = cur_dist + 1.0
+            if nd < dist[nx, ny, nz]:
+                dist[nx, ny, nz] = nd
+                labels[nx, ny, nz] = cur_label
+                q.append((nx, ny, nz))
+    boundary = np.zeros_like(surface_mask, dtype=bool)
+    dims = labels.shape
+    for dx, dy, dz in neighbors:
+        src = (slice(max(0, -dx), dims[0]-max(0, dx)),
+               slice(max(0, -dy), dims[1]-max(0, dy)),
+               slice(max(0, -dz), dims[2]-max(0, dz)))
+        dst = (slice(max(0, dx), dims[0]-max(0, -dx)),
+               slice(max(0, dy), dims[1]-max(0, -dy)),
+               slice(max(0, dz), dims[2]-max(0, -dz)))
+        overlap = surface_mask[src] & surface_mask[dst]
+        mismatch = (labels[src] != -1) & (labels[dst] != -1) & (labels[src] != labels[dst])
+        boundary[src] |= overlap & mismatch
+        boundary[dst] |= overlap & mismatch
+    strut_field = np.where(boundary, -1.0, 1.0).astype(np.float32)
+    strut_field = SDF3D(strut_field)
+    radius = max(cell_thickness/2.0, 0.0)
+    surface_net = f.intersection(f.thicken(strut_field, radius), shell_sdf)
+    if name:
+        slice_axis = "X"
+        slice_loc = surface_net.shape[0] // 2
+        slicePlot(surface_net, slice_loc, titlestring=f"Surface Voronoi Net for {name}", axis=slice_axis)
+    print("Surface Voronoi net complete!")
+    return surface_net
 
 @cuda.jit
 def strutFinderKernel(d_points,d_struts):

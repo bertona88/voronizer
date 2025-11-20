@@ -6,16 +6,17 @@ PERFORATE = False    #Perforates the support structure to allow fluids into the 
 IMG_STACK = False   #Outputs an image stack of the model
 AESTHETIC = False   #Removes all internal detail, works best with INVERSE
 INVERSE = False     #Also includes the inverse of the model as a separate file
-NET = False          #Only draws voronoi patterns at the surface of the objec
+NET = True          #Only draws voronoi patterns at the surface of the objec
+NET_CONNECT = True  #When NET is True, also fuse in the volumetric Voronoi interior
 SMOOTH = True       #Smooths the output meshes, removes the voxelized texture
 NET_THICKNESS = 4   #Sets the thickness of the net in voxels
 BUFFER = 4          #Sets the empty voxels around the object
 TPB = 8             #Threads per block, leave at 8 unless futzing.
 
-RESOLUTION = 140    #Sets the resolution of the Y and Z axes
-MODEL_THRESH = 1.0  #Influences the number of cells in the model, larger values lead to more cells
+RESOLUTION = 450    #Sets the resolution of the Y and Z axes
+MODEL_THRESH = 1.2  #Influences the number of cells in the model, larger values lead to more cells
 MODEL_SHELL = 0      #Shell thickness (in voxels); keep at 0 for the default open foam lattice
-MODEL_CELL = 0.015     #Approximate Voronoi strut diameter within the model (in voxels)
+MODEL_CELL = 1    #Approximate Voronoi strut diameter within the model (in voxels)
 
 SUPPORT_THRESH = 0.8 #Influences the number of cells in the supports, larger values lead to more cells
 SUPPORT_CELL = 0.7  #Approximate Voronoi strut diameter within the supports (in voxels)
@@ -24,7 +25,7 @@ SUPPORT_CELL = 0.7  #Approximate Voronoi strut diameter within the supports (in 
 #This file must be in the Input folder, set to be in the same directory as the
 #python files.
 
-FILE_NAME = "lamp.stl"
+FILE_NAME = "E.stl"
 #FILE_NAME = "3DBenchy_up.stl"
 #FILE_NAME = "3DBenchy.stl"
 #FILE_NAME = "bust_low.stl"

@@ -6,8 +6,9 @@
 - CUDA-powered kernels sit inside the helper modules (e.g., ``Frep.py``, ``SDF3D.py``, ``voxelize.py``). Keep GPU-specific logic there to maintain separation from orchestration code in ``main.py``.
 
 ## Build, Test, and Development Commands
+- Target Python 3.8+.
 - ``pip install -r requirements.txt`` *(if created)* or install the known dependencies individually: ``numba``, ``numpy``, ``matplotlib``, ``Pillow``, ``scikit-image``.
-- ``python main.py`` runs the full Voronization pipeline using the parameters set in ``userInput.py``.
+- ``python main.py`` runs the full Voronization pipeline using the parameters set in ``userInput.py``. When CUDA is missing, the run automatically falls back to the CPU strut finder (expect longer runtimes on large grids).
 - ``python visualizeSlice.py`` can be invoked with custom hooks for debugging slices; wrap usage in ad-hoc scripts as needed.
 
 ## Coding Style & Naming Conventions
@@ -27,5 +28,6 @@
 
 ## GPU & Configuration Tips
 - Ensure the target machine has a compatible NVIDIA GPU with CUDA Toolkit installed; failures often stem from missing drivers.
-- Adjust ``RESOLUTION`` in ``userInput.py`` to balance fidelity and runtime. Start low (~120) for debugging, then scale up.
-- Open Voronoi foam is the default: keep ``MODEL_SHELL = 0`` and tune ``MODEL_CELL`` / ``SUPPORT_CELL`` to set strut diameters.
+- Adjust ``RESOLUTION`` in ``userInput.py`` to balance fidelity and runtime. Start low (~120-140) for debugging, then scale up.
+- Open Voronoi foam is the default: keep ``MODEL_SHELL = 0`` and tune ``MODEL_CELL`` / ``SUPPORT_CELL`` to set strut diameters. ``NET = True`` switches to a surface Voronoi tiling; set ``NET_CONNECT = True`` to fuse that surface net with the volumetric lattice. ``NET_THICKNESS`` controls the shell band.
+- Outputs land in ``Output/`` as ``.ply`` meshes (git-ignored); post-process in MeshLab if you need smoothing or manifold cleanup.
