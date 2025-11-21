@@ -10,6 +10,7 @@
 - ``pip install -r requirements.txt`` *(if created)* or install the known dependencies individually: ``numba``, ``numpy``, ``matplotlib``, ``Pillow``, ``scikit-image``.
 - ``python main.py`` runs the full Voronization pipeline using the parameters set in ``userInput.py``. When CUDA is missing, the run automatically falls back to the CPU strut finder (expect longer runtimes on large grids).
 - ``python visualizeSlice.py`` can be invoked with custom hooks for debugging slices; wrap usage in ad-hoc scripts as needed.
+- ``python run_sweeps.py`` runs a few preset net configurations with plotting disabled and auto-export enabled to quickly compare outputs.
 
 ## Coding Style & Naming Conventions
 - Follow PEP 8 for Python: 4-space indentation, snake_case for functions and variables, PascalCase for classes (if added).
@@ -28,6 +29,7 @@
 
 ## GPU & Configuration Tips
 - Ensure the target machine has a compatible NVIDIA GPU with CUDA Toolkit installed; failures often stem from missing drivers.
-- Adjust ``RESOLUTION`` in ``userInput.py`` to balance fidelity and runtime. Start low (~120-140) for debugging, then scale up.
-- Open Voronoi foam is the default: keep ``MODEL_SHELL = 0`` and tune ``MODEL_CELL`` / ``SUPPORT_CELL`` to set strut diameters. ``NET = True`` switches to a surface Voronoi tiling; set ``NET_CONNECT = True`` to fuse that surface net with the volumetric lattice. ``NET_THICKNESS`` controls the shell band.
+- Adjust ``RESOLUTION`` in ``userInput.py`` to balance fidelity and runtime. Default scaling assumes a 100 mm span via ``MODEL_SIZE_MM`` so physical parameters stay stable across resolutions.
+- Open Voronoi foam is the default: keep ``MODEL_SHELL_MM = 0`` and tune ``MODEL_CELL_MM`` / ``SUPPORT_CELL_MM`` (plus ``BUFFER_MM`` and ``NET_THICKNESS_MM``) to set physical strut diameters and margins. ``NET = True`` switches to a surface Voronoi tiling; set ``NET_CONNECT = True`` to fuse that surface net with the volumetric lattice.
+- For batch runs, disable plotting with ``SHOW_PLOTS = False`` and enable auto saves with ``AUTO_EXPORT = True`` / ``RUN_LABEL``. Use ``DECIMATE_KEEP_FRACTION`` to reduce mesh size before export when sweeping many configs.
 - Outputs land in ``Output/`` as ``.ply`` meshes (git-ignored); post-process in MeshLab if you need smoothing or manifold cleanup.

@@ -315,6 +315,9 @@ def heart(x,y,z,cx,cy,cz):
     #cx,cy,cz = coordinates of the center of the heart shape.
     #Outputs a 3D matrix with negative values showing the inside of our shape, 
     #positive values showing the outside, and 0s to show the surfaces.
+    if not CUDA_AVAILABLE:
+        X, Y, Z = np.meshgrid(x - cx, y - cy, z - cz, indexing="ij")
+        return (X**2 + 9*(Y**2)/4 + Z**2 - 1)**3 - (X**2)*(Z**3) - 9*(Y**2)*(Z**3)/80
     TPBX, TPBY, TPBZ = TPB, TPB, TPB
     m = x.shape[0]
     n = y.shape[0]
@@ -343,6 +346,9 @@ def egg(x,y,z,cx,cy,cz):
     #cx,cy,cz = coordinates of the center of the egg shape.
     #Outputs a 3D matrix with negative values showing the inside of our shape, 
     #positive values showing the outside, and 0s to show the surfaces.
+    if not CUDA_AVAILABLE:
+        X, Y, Z = np.meshgrid(x - cx, y - cy, z - cz, indexing="ij")
+        return 9*X**2 + 16*(Y**2 + Z**2) + 2*X*(Y**2 + Z**2) + (Y**2 + Z**2) - 144
     TPBX, TPBY, TPBZ = TPB, TPB, TPB
     m = x.shape[0]
     n = y.shape[0]

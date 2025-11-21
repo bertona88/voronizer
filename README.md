@@ -5,7 +5,7 @@ Voronizer turns any STL mesh into an airy, open-cell structure built from Vorono
 ## What You Get
 - **Open Voronoi foam**: fill the model volume with struts or keep only a thin surface net.
 - **Surface or hybrid nets**: toggle `NET = True` for a classic surface Voronoi tiling; set `NET_CONNECT = True` to fuse that net with a full volumetric lattice inside.
-- **Per-feature control**: independent parameters for model infill and support lattices (`MODEL_CELL`, `SUPPORT_CELL`, thresholds, shells).
+- **Per-feature control**: independent parameters for model infill and support lattices (`MODEL_CELL_MM`, `SUPPORT_CELL_MM`, thresholds, shells).
 - **GPU-accelerated pipeline**: `numba.cuda` kernels for voxelization, signed-distance evaluation, and Voronoi carving.
 - **Debug + export tools**: slice visualizer, raw voxel analysis, and mesh exporters for downstream cleanup.
 
@@ -30,18 +30,26 @@ pip install numba numpy matplotlib Pillow scikit-image
 ## Quick Start
 1. Drop an STL in `Input/`.
 2. In `userInput.py` set `FILE_NAME = "myMesh.stl"` and tweak:
-   - `RESOLUTION`: grid density (start ~140 for testing).
-   - `MODEL_CELL` / `SUPPORT_CELL`: target Voronoi strut thickness in voxels.
+   - `RESOLUTION`: grid density (start ~140 for testing). Physical parameters stay consistent across resolutions using `MODEL_SIZE_MM` (10 cm default span).
+   - `DECIMATE_KEEP_FRACTION`: 0-1 fraction of vertices/faces to keep during built-in mesh decimation (1.0 disables, e.g., 0.5 roughly halves mesh size).
+   - `MODEL_CELL_MM` / `SUPPORT_CELL_MM`: target Voronoi strut thickness in millimeters.
    - `MODEL_THRESH` / `SUPPORT_THRESH`: cell density. Larger = more points/struts.
-   - `MODEL_SHELL`: add a solid skin outside the lattice (keep `0` for fully open cells).
-   - `NET = True` + `NET_THICKNESS`: surface-only webbing using a surface Voronoi tiling.
+   - `MODEL_SHELL_MM`: add a solid skin outside the lattice (keep `0` for fully open cells).
+   - `NET = True` + `NET_THICKNESS_MM`: surface-only webbing using a surface Voronoi tiling.
    - `NET_CONNECT = True`: fuse the surface net with the full volumetric Voronoi interior.
+   - `BUFFER_MM`: empty margin around the model before processing.
+   - `SHOW_PLOTS`: turn slicing/contour figures on/off (disable for batch sweeps).
+   - `AUTO_EXPORT` + `RUN_LABEL`: skip the interactive export prompt and append a label to auto-named `.ply` outputs.
    - `PERFORATE = True`: drill holes through support cells for resin flushes.
 3. Run `python main.py`. On systems without CUDA, the CPU fallback kicks in automatically; just budget extra time for the strut-finding phase (unless you’re experimenting on very small structures, where the CPU route can be quicker).
 4. Collect `.ply` meshes from `Output/` and, if necessary, post-process in MeshLab (clean non-manifold faces, apply HC-Laplacian smoothing).
 
+Exports are auto-named with resolution, thresholds, strut diameters, and optional `RUN_LABEL`. Meshes can be decimated in-tool via `DECIMATE_KEEP_FRACTION` to avoid massive `.ply` files.
+
+For quick experiments, try `python run_sweeps.py`—it runs a few preset surface/hybrid net configurations against `Input/sphere.stl` with plotting disabled and auto-export enabled.
+
 ## Open-Cell Tips
-- Balance `MODEL_CELL` with `RESOLUTION`: smaller voxels allow thinner struts without breakup.
+- Voxel scale now comes from millimeter inputs; adjust `MODEL_SIZE_MM` if your mesh is significantly larger/smaller than 10 cm so buffers and strut diameters stay physically consistent.
 - For delicate lattices, keep `SMOOTH = True` and consider `AESTHETIC = True` to remove internal clutter while keeping the outer foam.
 - Need two printable parts? Set `SEPARATE_SUPPORTS = True` to emit model + supports independently.
 - Keep GPU memory headroom: if you see `CudaAPIError: cuMemcpyDtoH`, drop `RESOLUTION` or simplify the STL (MeshMixer → Simplification → 0.5 reduction works well).

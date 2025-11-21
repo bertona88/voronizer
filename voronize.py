@@ -8,6 +8,10 @@ import userInput as u
 try: TPB = u.TPB 
 except: TPB = 8
 try:
+    SHOW_PLOTS = u.SHOW_PLOTS
+except Exception:
+    SHOW_PLOTS = True
+try:
     CUDA_AVAILABLE = cuda.is_available()
 except Exception:
     CUDA_AVAILABLE = False
@@ -75,20 +79,20 @@ def voronize(origObject, seedPoints, cellThickness, shellThickness, scale,
         else:
             sliceLocation = resZ//2
     seedPoints = jumpFlood(seedPoints,order)
-    if name !="":
+    if SHOW_PLOTS and name !="":
         contourPlot(seedPoints[:,:,:,3],sliceLocation,titlestring="SDF of the Points for "+name,axis = sliceAxis)
     voronoi = strutFinder(seedPoints)
     voronoi = SDF3D(voronoi)
-    if name !="":
+    if SHOW_PLOTS and name !="":
         slicePlot(voronoi,sliceLocation,titlestring="Voronoi Structure for "+name,axis = sliceAxis)
     strutRadius = max(cellThickness/2.0, 0.0)
     voronoi = f.intersection(f.thicken(voronoi,strutRadius),origObject)
-    if name !="":
+    if SHOW_PLOTS and name !="":
         slicePlot(voronoi, sliceLocation, titlestring=(name+' Trimmed and Thinned'),axis = sliceAxis)
     if shellThickness>0:
         u_shell = f.shell(origObject,shellThickness)
         voronoi = f.union(u_shell,voronoi)
-        if name !="":
+        if SHOW_PLOTS and name !="":
             slicePlot(voronoi, sliceLocation, titlestring=name+' With Shell',axis = sliceAxis)
     if name =="":
         name = "Model"
@@ -152,7 +156,7 @@ def surface_voronoi_net(orig_sdf, seed_density, net_thickness, cell_thickness, s
     strut_field = SDF3D(strut_field)
     radius = max(cell_thickness/2.0, 0.0)
     surface_net = f.intersection(f.thicken(strut_field, radius), shell_sdf)
-    if name:
+    if SHOW_PLOTS and name:
         slice_axis = "X"
         slice_loc = surface_net.shape[0] // 2
         slicePlot(surface_net, slice_loc, titlestring=f"Surface Voronoi Net for {name}", axis=slice_axis)
